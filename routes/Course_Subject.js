@@ -215,6 +215,7 @@ cron.schedule('0 0 */60 * * *', () => {
   savlogs()
   saveBundle();
 });
+
 const fetchNewApiKey = async () => {
   try {
 
@@ -263,7 +264,7 @@ const updateApiKey = async () => {
 
       await ApiKey.create({
         apiKey: newApiKey,
-        expiresAt: new Date(new Date().getTime() + 28 * 24 * 60 * 60 * 1000), // 15 days from now
+        expiresAt: new Date(new Date().getTime() + 28 * 24 * 60 * 60 * 1000), // 28 days from now
       });
       await Log.create({
         message: `New API key created successfully : ${newApiKey}`,
@@ -274,7 +275,7 @@ const updateApiKey = async () => {
   } catch (error) {
     await Log.create({
       message: `Error processing apiKey: ${error.message}`,
-      level: "apiKey-update",
+      level: "apiKey-update-error",
     });
     // console.error("Error updating API key:", error.message);
   }

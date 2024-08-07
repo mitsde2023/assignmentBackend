@@ -195,7 +195,21 @@ const StudentSubjectWiseData = async () => {
       };
     });
 
-    await StudentSubWiseMarks.bulkCreate(finalData);
+    async function bulkInsertInBatches(finalData, batchSize = 1000) {
+      try {
+        for (let i = 0; i < finalData.length; i += batchSize) {
+          const batch = finalData.slice(i, i + batchSize);
+          await StudentSubWiseMarks.bulkCreate(batch);
+        }
+        console.log('Data inserted successfully.');
+      } catch (error) {
+        console.error('Error during bulk insert:', error);
+      }
+    }
+    
+    // Usage
+    bulkInsertInBatches(finalData);
+    
     console.log('Data saved successfully.');
   } catch (error) {
     console.error('Error fetching or saving data:', error);
@@ -391,7 +405,6 @@ app.get('/updatecode', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 app.get('/api/grade_marks', async (req, res) => {
   try {
