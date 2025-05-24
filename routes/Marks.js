@@ -219,107 +219,217 @@ const getApiKey = async () => {
 
 //function runs every 24 h To update Marks ---------------------------------------------------------------------
 
+// const StudentSubjectMarksDataEveryDay = async (data, res) => {
+//     try {
+//         const apiKey = await getApiKey();
+//         for (const item of data) {
+//             const class_id = item.subject_id;
+//             const subject_name = item.subject_name;
+
+//             try {
+//                 const response = await axios.get(
+//                     `https://mitsde-api.edmingle.com/nuSource/api/v1/reports/classprogress?page=1&per_page=3000&class_id=${class_id}`,
+//                     {
+//                         headers: {
+//                             ORGID: 3,
+//                             apiKey: apiKey,
+//                         },
+//                     }
+//                 );
+
+//                 const classReport = response.data.class_report;
+//                 const userMarks = classReport.user_marks;
+//                 const users = classReport.users;
+//                 const uniqueUserIds = new Set();
+
+//                 // Collect unique user IDs
+//                 users.forEach((user) => uniqueUserIds.add(user[0]));
+
+//                 const flattenedData = [];
+
+//                 // Iterate over unique user IDs
+//                 for (const userId of uniqueUserIds) {
+//                     const userData = {
+//                         subject_id: class_id,
+//                         subject_name: subject_name,
+//                         user_id: userId,
+//                         // name: "",  // Default value
+//                         // userUsername: "",  // Default value
+//                         assignments: [], // Default value
+//                     };
+
+//                     const userMarksData = userMarks[userId]
+//                         .slice(0, 2)
+//                         .map((mark, index) => ({
+//                             assignment: `Assignment ${index + 1}` || null,
+//                             mk: mark.mk || null,
+//                             tm: mark.tm || null,
+//                             atmpt: mark.atmpt || null,
+//                         }));
+//                     userData.assignments = userMarksData;
+//                     flattenedData.push(userData);
+//                 }
+
+//                 // Iterate over the flattenedData array
+//                 for (const userData of flattenedData) {
+//                     const { user_id, subject_id } = userData;
+//                     try {
+//                         const existingRecord = await FlattenedDataModel.findOne({
+//                             where: { user_id, subject_id },
+//                         });
+
+//                         if (existingRecord) {
+//                             await FlattenedDataModel.update(
+//                                 { assignments: userData.assignments },
+//                                 { where: { user_id, subject_id } }
+//                             );
+//                         } else {
+//                             // Create new record
+//                             await FlattenedDataModel.create(userData);
+//                             console.log(
+//                                 `No matching records found. New record inserted for user_id ${user_id} and subject_id ${subject_id}.`
+//                             );
+//                         }
+//                     } catch (updateError) {
+//                         console.error(
+//                             `Error updating/inserting subject marks data for user_id ${user_id} and subject_id ${subject_id}:`,
+//                             updateError
+//                         );
+//                     }
+//                 }
+//                 console.log(
+//                     "Subject Marks Data processed successfully for class_id:",
+//                     class_id
+//                 );
+//             } catch (error) {
+//                 await Log.create({
+//                     message: `Error processing class_id ${class_id}: ${error.message}`,
+//                     level: "update-error",
+//                 });
+//             }
+//         }
+//         return res.status(200).json({
+//             success: true,
+//             message: "Subject Marks Data saved/updated successfully for all class_ids",
+//         });
+//     } catch (error) {
+//         console.error(error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal Server Error",
+//             error: error.message,
+//         });
+//     }
+// };
+
 const StudentSubjectMarksDataEveryDay = async (data, res) => {
-    try {
-        const apiKey = await getApiKey();
-        for (const item of data) {
-            const class_id = item.subject_id;
-            const subject_name = item.subject_name;
+  try {
+    const apiKey = await getApiKey();
+    for (const item of data) {
+      const class_id = item.subject_id;
+      const subject_name = item.subject_name;
 
-            try {
-                const response = await axios.get(
-                    `https://mitsde-api.edmingle.com/nuSource/api/v1/reports/classprogress?page=1&per_page=3000&class_id=${class_id}`,
-                    {
-                        headers: {
-                            ORGID: 3,
-                            apiKey: apiKey,
-                        },
-                    }
-                );
+      try {
+        const response = await axios.get(
+          `https://mitsde-api.edmingle.com/nuSource/api/v1/reports/classprogress?page=1&per_page=3000&class_id=${class_id}`,
+          {
+            headers: {
+              ORGID: 3,
+              apiKey: apiKey,
+            },
+          }
+        );
 
-                const classReport = response.data.class_report;
-                const userMarks = classReport.user_marks;
-                const users = classReport.users;
-                const uniqueUserIds = new Set();
+        const classReport = response.data.class_report;
+        const userMarks = classReport.user_marks;
+        const users = classReport.users;
+        const uniqueUserIds = new Set();
 
-                // Collect unique user IDs
-                users.forEach((user) => uniqueUserIds.add(user[0]));
+        // Collect unique user IDs
+        users.forEach((user) => uniqueUserIds.add(user[0]));
 
-                const flattenedData = [];
+        const flattenedData = [];
 
-                // Iterate over unique user IDs
-                for (const userId of uniqueUserIds) {
-                    const userData = {
-                        subject_id: class_id,
-                        subject_name: subject_name,
-                        user_id: userId,
-                        // name: "",  // Default value
-                        // userUsername: "",  // Default value
-                        assignments: [], // Default value
-                    };
+        // Iterate over unique user IDs
+        for (const userId of uniqueUserIds) {
+          const userData = {
+            subject_id: class_id,
+            subject_name: subject_name,
+            user_id: userId,
+            assignments: [],
+          };
 
-                    const userMarksData = userMarks[userId]
-                        .slice(0, 2)
-                        .map((mark, index) => ({
-                            assignment: `Assignment ${index + 1}` || null,
-                            mk: mark.mk || null,
-                            tm: mark.tm || null,
-                            atmpt: mark.atmpt || null,
-                        }));
-                    userData.assignments = userMarksData;
-                    flattenedData.push(userData);
-                }
-
-                // Iterate over the flattenedData array
-                for (const userData of flattenedData) {
-                    const { user_id, subject_id } = userData;
-                    try {
-                        const existingRecord = await FlattenedDataModel.findOne({
-                            where: { user_id, subject_id },
-                        });
-
-                        if (existingRecord) {
-                            await FlattenedDataModel.update(
-                                { assignments: userData.assignments },
-                                { where: { user_id, subject_id } }
-                            );
-                        } else {
-                            // Create new record
-                            await FlattenedDataModel.create(userData);
-                            console.log(
-                                `No matching records found. New record inserted for user_id ${user_id} and subject_id ${subject_id}.`
-                            );
-                        }
-                    } catch (updateError) {
-                        console.error(
-                            `Error updating/inserting subject marks data for user_id ${user_id} and subject_id ${subject_id}:`,
-                            updateError
-                        );
-                    }
-                }
-                console.log(
-                    "Subject Marks Data processed successfully for class_id:",
-                    class_id
-                );
-            } catch (error) {
-                await Log.create({
-                    message: `Error processing class_id ${class_id}: ${error.message}`,
-                    level: "update-error",
-                });
-            }
+          // Map assignments, excluding entries with null mk or tm
+          const userMarksData = userMarks[userId]
+            .filter(
+              (mark) =>
+                mark.exercise_id !== -1 && mark.mk !== null && mark.tm !== null
+            )
+            .map((mark, index) => ({
+              assignment: Assignment ${index + 1},
+              mk: mark.mk,
+              tm: mark.tm,
+              atmpt: mark.atmpt || null,
+            }));
+          userData.assignments = userMarksData;
+          flattenedData.push(userData);
         }
-        return res.status(200).json({
-            success: true,
-            message: "Subject Marks Data saved/updated successfully for all class_ids",
+
+        // Iterate over the flattenedData array
+        for (const userData of flattenedData) {
+          const { user_id, subject_id, assignments } = userData;
+          try {
+            const existingRecord = await FlattenedDataModel.findOne({
+              where: { user_id, subject_id },
+            });
+
+            if (existingRecord) {
+              await FlattenedDataModel.update(
+                { assignments },
+                { where: { user_id, subject_id } }
+              );
+              console.log(
+                Updated record for user_id ${user_id} and subject_id ${subject_id} with assignments:,
+                JSON.stringify(assignments)
+              );
+            } else {
+              await FlattenedDataModel.create(userData);
+              console.log(
+                New record inserted for user_id ${user_id} and subject_id ${subject_id} with assignments:,
+                JSON.stringify(assignments)
+              );
+            }
+          } catch (updateError) {
+            console.error(
+              Error updating/inserting subject marks data for user_id ${user_id} and subject_id ${subject_id}:,
+              updateError
+            );
+          }
+        }
+        console.log(
+          "Subject Marks Data processed successfully for class_id:",
+          class_id
+        );
+      } catch (error) {
+        await Log.create({
+          message: Error processing class_id ${class_id}: ${error.message},
+          level: "update-error",
         });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-            error: error.message,
-        });
+      }
     }
+    return res.status(200).json({
+      success: true,
+      message:
+        "Subject Marks Data saved/updated successfully for all class_ids",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
 };
 
 const fetchDataAndSave = async () => {
